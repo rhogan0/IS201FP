@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wordle Clone</title>
+  <style>
+    body {
+      background-color: white;
+      color: #C71585;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    h1 {
+      font-size: 2em;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+      max-width: 400px;
+    }
+
+    .tile {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #C71585;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      text-transform: uppercase;
+    }
+
+    .correct {
+      background-color: #C71585;
+      color: white;
+    }
+
+    .present {
+      background-color: #f5a3c7;
+      color: white;
+    }
+
+    .absent {
+      background-color: #ddd;
+      color: #C71585;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 1em;
+      text-transform: uppercase;
+      border: 2px solid #C71585;
+      color: #C71585;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 1em;
+      border: none;
+      background-color: #C71585;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #a0126f;
+    }
+
+    #play-again-button {
+      margin-top: 20px;
+      display: none; /* Hidden initially */
+    }
+  </style>
+</head>
+<body>
+
+<h1>Wordle Clone</h1>
+<div id="game"></div>
+<div>
+  <input type="text" id="guess" maxlength="5">
+  <button onclick="submitGuess()">Guess</button>
+</div>
+<p id="message"></p>
+<button id="play-again-button" onclick="resetGame()">Play Again</button>
+
+<script>
+  const words = ["PLANT", "HOUSE", "GREAT", "HELLO", "WORLD"]; // Example word list
+  let solution = chooseWord();
+  const maxGuesses = 6;
+  let currentRow = 0;
+  let gameOver = false;
+
+  const gameContainer = document.getElementById("game");
+  const guessInput = document.getElementById("guess");
+  const messageDisplay = document.getElementById("message");
+  const playAgainButton = document.getElementById("play-again-button");
+
+  // Initialize grid
+  function initializeGrid() {
+    gameContainer.innerHTML = ''; // Clear previous grid
+    for (let i = 0; i < maxGuesses * 5; i++) {
+      const tile = document.createElement("div");
+      tile.classList.add("tile");
+      gameContainer.appendChild(tile);
+    }
+  }
+
+  function chooseWord() {
+    return words[Math.floor(Math.random() * words.length)];
+  }
+
+  function submitGuess() {
+    if (gameOver) return;
+
+    const guess = guessInput.value.toUpperCase();
+
+    if (guess.length !== 5) {
+      messageDisplay.textContent = "Enter a 5-letter word.";
+      return;
+    }
+
+    const rowStart = currentRow * 5;
+    const solutionLetters = solution.split("");
+    const guessLetters = guess.split("");
+
+    // Create a copy of the solution letters to handle duplicates
+    const solutionCopy = [...solutionLetters];
+
+    for (let i = 0; i < 5; i++) {
+      const tile = gameContainer.children[rowStart + i];
+      tile.textContent = guessLetters[i];
+      tile.classList.add("filled"); // Add a class to indicate it's filled
+
+      if (guessLetters[i] === solutionCopy[i]) {
+        tile.classList.add("correct");
+        solutionCopy[i] = null; // Mark as used
+      }
+    }
+
+    for (let i = 0; i < 5; i++) {
+      const tile = gameContainer.children[rowStart + i];
+      if (!tile.classList.contains("correct")) {
+        if (solutionCopy.includes(guessLetters[i])) {
+          tile.classList.add("present");
+          solutionCopy[solutionCopy.indexOf(guessLetters[i])] = null; // Mark as used
+        } else {
+          tile.classList.add("absent");
+        }
+      }
+    }
+
+    currentRow++;
+    guessInput.value = "";
+    messageDisplay.textContent = "";
+
+    if (guess === solution) {
+      messageDisplay.textContent = "🎉 You got it!";
+      gameOver = true;
+      guessInput.disabled = true;
+      playAgainButton.style.display = "block"; // Always show on game end
+    } else if (currentRow === maxGuesses) {
+      messageDisplay.textContent = `😢 Game over! The word was ${solution}.`;
+      gameOver = true;
+      guessInput.disabled = true;
+      playAgainButton.style.display = "block"; // Always show on game end
+    }
+  }
+
+  function resetGame() {
+    solution = chooseWord();
+    currentRow = 0;
+    gameOver = false;
+    guessInput.disabled = false;
+    guessInput.value = "";
+    messageDisplay.textContent = "";
+    playAgainButton.style.display = "none";
+    initializeGrid();
+  }
+
+  guessInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      submitGuess();
+    }
+  });
+
+  // Initial grid setup
+  initializeGrid();
+</script>
+
+</body>
+</html>
